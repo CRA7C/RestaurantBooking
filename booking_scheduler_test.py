@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 import unittest
 from unittest.mock import Mock, patch
 
-from communication_test import TestableSmsSender
+from communication_test import TestableSmsSender, TestableMailSender
 from schedule import Customer, Schedule
 from booking_scheduler import BookingScheduler
 from communication import SmsSender, MailSender
@@ -20,9 +20,12 @@ class BookingSchedulerTest(unittest.TestCase):
     def setUp(self):
         super().setUp()
         self.booking_scheduler = BookingScheduler(CAPACITY_PER_HOUR)
+
         self.testable_sms_sender = TestableSmsSender()
         self.booking_scheduler.set_sms_sender(self.testable_sms_sender)
 
+        self.testable_mail_sender = TestableMailSender()
+        self.booking_scheduler.set_mail_sender(self.testable_mail_sender)
 
     def test_예약은_정시에만_가능하다_정시가_아닌경우_예약불가(self):
         # arrange
@@ -79,7 +82,15 @@ class BookingSchedulerTest(unittest.TestCase):
         self.assertTrue(self.testable_sms_sender.is_send_method_is_called())
 
     def test_이메일이_없는_경우에는_이메일_미발송(self):
-        pass
+        # arrange
+        schedule = Schedule(ON_THE_HOUR, UNDER_CAPACITY, CUSTOMER)
+
+        # act
+        self.booking_scheduler.add_schedule(schedule)
+
+        # assert
+        self.assertEqual(self.testable_mail_sender.get_count_send_mail_is_called(), 0)
+
 
     def test_이메일이_있는_경우에는_이메일_발송(self):
         pass
